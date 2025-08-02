@@ -44,7 +44,8 @@ router.post('/register', [
         id: user.id,
         name: user.name,
         email: user.email,
-        bio: user.bio
+        bio: user.bio,
+        role: user.role
       }
     });
   } catch (error) {
@@ -88,7 +89,8 @@ router.post('/login', [
         id: user.id,
         name: user.name,
         email: user.email,
-        bio: user.bio
+        bio: user.bio,
+        role: user.role
       }
     });
   } catch (error) {

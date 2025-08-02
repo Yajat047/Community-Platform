@@ -13,6 +13,7 @@ router.get('/profile', auth, async (req, res) => {
       name: req.user.name,
       email: req.user.email,
       bio: req.user.bio,
+      role: req.user.role,
       createdAt: req.user.createdAt
     });
   } catch (error) {
@@ -45,6 +46,7 @@ router.put('/profile', auth, [
       name: user.name,
       email: user.email,
       bio: user.bio,
+      role: user.role,
       createdAt: user.createdAt
     });
   } catch (error) {
@@ -67,6 +69,7 @@ router.get('/:id', async (req, res) => {
       name: user.name,
       email: user.email,
       bio: user.bio,
+      role: user.role,
       createdAt: user.createdAt
     });
   } catch (error) {
