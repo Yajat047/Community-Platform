@@ -1,0 +1,18 @@
+{
+  "name": "community-platform",
+  "version": "1.0.0",
+  "description": "A Mini LinkedIn-like Community Platform",
+  "main": "index.js",
+  "scripts": {
+    "dev": "concurrently \"npm run backend\" \"npm run frontend\"",
+    "frontend": "cd frontend && npm run dev",
+    "backend": "cd backend && npm run dev",
+    "build": "cd frontend && npm run build",
+    "install-deps": "npm install && cd frontend && npm install && cd ../backend && npm install"
+  },
+  "keywords": ["community", "social", "platform", "react", "nodejs", "mongodb"],
+  "author": "Your Name",
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}
