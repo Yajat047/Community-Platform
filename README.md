@@ -164,6 +164,7 @@ Community-Platform/
 6. **Access the application:**
    - **Frontend:** https://get-linked-ebon.vercel.app/
    - **Backend API:** https://community-platform-x95s.onrender.com/api/
+   - **Please wait a few seconds after opening the vercel link (render backend takes time to initialize)**
 
 ## Demo Logins
 
