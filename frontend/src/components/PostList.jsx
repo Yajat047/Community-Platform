@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import axios from 'axios';
@@ -6,6 +6,39 @@ import axios from 'axios';
 const PostList = ({ posts, onPostsUpdate }) => {
   const { user } = useAuth();
   const [likedPosts, setLikedPosts] = useState(new Set());
+  const [likeCounts, setLikeCounts] = useState({});
+  
+  // Load like status for all posts when component mounts or posts change
+  useEffect(() => {
+    const loadLikeStatus = async () => {
+      if (!user || !posts.length) return;
+      
+      try {
+        const likePromises = posts.map(async (post) => {
+          const response = await axios.get(`/posts/${post._id}/like-status`);
+          return { postId: post._id, ...response.data };
+        });
+        
+        const likeStatuses = await Promise.all(likePromises);
+        const newLikedPosts = new Set();
+        const newLikeCounts = {};
+        
+        likeStatuses.forEach(({ postId, isLiked, likeCount }) => {
+          if (isLiked) {
+            newLikedPosts.add(postId);
+          }
+          newLikeCounts[postId] = likeCount;
+        });
+        
+        setLikedPosts(newLikedPosts);
+        setLikeCounts(newLikeCounts);
+      } catch (error) {
+        console.error('Error loading like status:', error);
+      }
+    };
+    
+    loadLikeStatus();
+  }, [posts, user]);
   
   const formatDate = (dateString) => {
     if (!dateString) return 'Unknown time';
@@ -26,20 +59,48 @@ const PostList = ({ posts, onPostsUpdate }) => {
     try {
       // Toggle like in local state immediately for better UX
       const newLikedPosts = new Set(likedPosts);
-      if (likedPosts.has(postId)) {
+      const newLikeCounts = { ...likeCounts };
+      const wasLiked = likedPosts.has(postId);
+      
+      if (wasLiked) {
         newLikedPosts.delete(postId);
+        newLikeCounts[postId] = Math.max(0, (newLikeCounts[postId] || 0) - 1);
       } else {
         newLikedPosts.add(postId);
+        newLikeCounts[postId] = (newLikeCounts[postId] || 0) + 1;
       }
+      
       setLikedPosts(newLikedPosts);
+      setLikeCounts(newLikeCounts);
 
-      // Here you can add API call to backend to save the like
-      // await axios.post(`/posts/${postId}/like`);
+      // Make API call to backend to save the like
+      const response = await axios.post(`/posts/${postId}/like`);
+      
+      // Update with server response to ensure consistency
+      if (response.data.isLiked) {
+        newLikedPosts.add(postId);
+      } else {
+        newLikedPosts.delete(postId);
+      }
+      newLikeCounts[postId] = response.data.likeCount;
+      
+      setLikedPosts(new Set(newLikedPosts));
+      setLikeCounts({ ...newLikeCounts });
       
     } catch (error) {
       console.error('Error liking post:', error);
       // Revert the like state if API call fails
-      setLikedPosts(likedPosts);
+      const revertedLikedPosts = new Set(likedPosts);
+      const revertedLikeCounts = { ...likeCounts };
+      
+      if (likedPosts.has(postId)) {
+        revertedLikedPosts.add(postId);
+      } else {
+        revertedLikedPosts.delete(postId);
+      }
+      
+      setLikedPosts(revertedLikedPosts);
+      setLikeCounts(revertedLikeCounts);
     }
   };
 
@@ -74,7 +135,7 @@ const PostList = ({ posts, onPostsUpdate }) => {
                   onClick={() => handleLike(post._id)}
                 >
                   <span>{likedPosts.has(post._id) ? '❤️' : '🤍'}</span>
-                  <span>Like</span>
+                  <span>Like {likeCounts[post._id] > 0 && `(${likeCounts[post._id]})`}</span>
                 </button>
               </div>
             )}
