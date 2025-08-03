@@ -1,5 +1,5 @@
 .navbar {
-  background-color: #0077b5;
+  background-color: #1f2937;
   color: white;
   padding: 1rem 0;
   position: fixed;
@@ -7,7 +7,8 @@
   left: 0;
   right: 0;
   z-index: 1000;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.6);
+  border-bottom: 1px solid #4b5563;
 }
 
 .nav-container {
@@ -22,12 +23,13 @@
 .nav-logo {
   font-size: 1.5rem;
   font-weight: bold;
-  color: white;
+  color: #3b82f6;
   text-decoration: none;
+  transition: color 0.3s;
 }
 
 .nav-logo:hover {
-  color: #e6f3ff;
+  color: #60a5fa;
 }
 
 .nav-links {
@@ -40,12 +42,13 @@
   color: white;
   text-decoration: none;
   padding: 0.5rem 1rem;
-  border-radius: 4px;
-  transition: background-color 0.3s;
+  border-radius: 8px;
+  transition: all 0.3s;
 }
 
 .nav-link:hover {
-  background-color: rgba(255, 255, 255, 0.1);
+  background-color: #374151;
+  color: #3b82f6;
 }
 
 .nav-button {
@@ -57,13 +60,14 @@
 }
 
 .admin-link {
-  background-color: rgba(255, 255, 255, 0.2);
-  border-radius: 4px;
+  background-color: #1e40af;
+  border-radius: 8px;
   font-weight: 600;
 }
 
 .admin-link:hover {
-  background-color: rgba(255, 255, 255, 0.3);
+  background-color: #2563eb;
+  color: white;
 }
 
 @media (max-width: 768px) {

@@ -124,7 +124,7 @@ const Profile = () => {
                 onClick={() => setIsEditing(true)} 
                 className="btn btn-primary"
               >
-                Edit Profile
+                Edit Profile/Bio
               </button>
             </div>
           </>

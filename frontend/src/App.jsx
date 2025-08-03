@@ -40,6 +40,9 @@ function App() {
               <Route path="/user/:userId" element={<UserProfile />} />
             </Routes>
           </main>
+          <footer className="footer">
+            <p>Made by Yajat Dureja</p>
+          </footer>
         </div>
       </Router>
     </AuthProvider>

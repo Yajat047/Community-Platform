@@ -1,8 +1,11 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import axios from 'axios';
 
-const PostList = ({ posts }) => {
+const PostList = ({ posts, onPostsUpdate }) => {
   const { user } = useAuth();
+  const [likedPosts, setLikedPosts] = useState(new Set());
   
   const formatDate = (dateString) => {
     if (!dateString) return 'Unknown time';
@@ -15,6 +18,29 @@ const PostList = ({ posts }) => {
       day: 'numeric',
       year: 'numeric'
     }) + ' at ' + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  };
+
+  const handleLike = async (postId) => {
+    if (!user) return;
+
+    try {
+      // Toggle like in local state immediately for better UX
+      const newLikedPosts = new Set(likedPosts);
+      if (likedPosts.has(postId)) {
+        newLikedPosts.delete(postId);
+      } else {
+        newLikedPosts.add(postId);
+      }
+      setLikedPosts(newLikedPosts);
+
+      // Here you can add API call to backend to save the like
+      // await axios.post(`/posts/${postId}/like`);
+      
+    } catch (error) {
+      console.error('Error liking post:', error);
+      // Revert the like state if API call fails
+      setLikedPosts(likedPosts);
+    }
   };
 
   return (
@@ -41,6 +67,17 @@ const PostList = ({ posts }) => {
             <div className="post-content">
               {post.content}
             </div>
+            {user && (
+              <div className="post-actions">
+                <button
+                  className={`like-button ${likedPosts.has(post._id) ? 'liked' : ''}`}
+                  onClick={() => handleLike(post._id)}
+                >
+                  <span>{likedPosts.has(post._id) ? '❤️' : '🤍'}</span>
+                  <span>Like</span>
+                </button>
+              </div>
+            )}
           </div>
         ))
       )}
