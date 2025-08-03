@@ -1,7 +1,7 @@
 {
-  "name": "community-platform-backend",
+  "name": "get-linked-backend",
   "version": "1.0.0",
-  "description": "Backend for Community Platform",
+  "description": "Backend for Get Linked Platform",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",

@@ -1,7 +1,7 @@
 {
-  "name": "community-platform",
+  "name": "get-linked",
   "version": "1.0.0",
-  "description": "A Mini LinkedIn-like Community Platform",
+  "description": "Get Linked - A Mini LinkedIn-like Community Platform",
   "main": "index.js",
   "scripts": {
     "dev": "concurrently \"npm run backend\" \"npm run frontend\"",

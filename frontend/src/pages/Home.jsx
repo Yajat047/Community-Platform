@@ -36,7 +36,7 @@ const Home = () => {
 
   return (
     <div className="container">
-      <h1>Welcome to Community Platform</h1>
+      <h1>Welcome to Get Linked</h1>
       
       {user && (
         <>

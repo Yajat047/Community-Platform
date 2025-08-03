@@ -10,6 +10,7 @@ const AdminDashboard = () => {
   const [posts, setPosts] = useState([]);
   const [userPosts, setUserPosts] = useState([]);
   const [selectedUser, setSelectedUser] = useState(null);
+  const [showUserPostsPopup, setShowUserPostsPopup] = useState(false);
   const [activeTab, setActiveTab] = useState('stats');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -46,7 +47,7 @@ const AdminDashboard = () => {
       const response = await axios.get(`/admin/users/${userId}/posts`);
       setUserPosts(response.data);
       setSelectedUser({ id: userId, name: userName });
-      setActiveTab('userPosts');
+      setShowUserPostsPopup(true);
     } catch (error) {
       setError('Failed to fetch user posts');
       console.error('Fetch user posts error:', error);
@@ -81,8 +82,8 @@ const AdminDashboard = () => {
     try {
       await axios.delete(`/admin/posts/${postId}`);
       setPosts(posts.filter(p => p._id !== postId));
-      // Also update userPosts if we're viewing user-specific posts
-      if (activeTab === 'userPosts') {
+      // Also update userPosts if we're viewing user-specific posts in popup
+      if (showUserPostsPopup) {
         setUserPosts(userPosts.filter(p => p._id !== postId));
       }
       // Refresh stats
@@ -178,14 +179,6 @@ const AdminDashboard = () => {
         >
           Posts
         </button>
-        {selectedUser && (
-          <button 
-            className={`tab-button ${activeTab === 'userPosts' ? 'active' : ''}`}
-            onClick={() => setActiveTab('userPosts')}
-          >
-            {selectedUser.name}'s Posts
-          </button>
-        )}
       </div>
 
       {activeTab === 'stats' && stats && (
@@ -291,31 +284,44 @@ const AdminDashboard = () => {
         </div>
       )}
 
-      {activeTab === 'userPosts' && selectedUser && (
-        <div className="admin-section">
-          <h2>{selectedUser.name}'s Posts</h2>
-          <div className="posts-list">
-            {userPosts.length === 0 ? (
-              <p className="no-posts">This user has no posts.</p>
-            ) : (
-              userPosts.map(post => (
-                <div key={post._id} className="post-item">
-                  <div className="post-info">
-                    <h4>By: {post.author.name}</h4>
-                    <p className="post-content">{post.content.substring(0, 100)}...</p>
-                    <p className="post-date">Posted: {formatDate(post.createdAt)}</p>
-                  </div>
-                  <div className="post-actions">
-                    <button 
-                      className="btn-small btn-danger"
-                      onClick={() => handleDeletePost(post._id)}
-                    >
-                      Delete Post
-                    </button>
-                  </div>
-                </div>
-              ))
-            )}
+      {/* User Posts Popup Modal */}
+      {showUserPostsPopup && selectedUser && (
+        <div className="popup-overlay" onClick={() => setShowUserPostsPopup(false)}>
+          <div className="popup-content" onClick={(e) => e.stopPropagation()}>
+            <div className="popup-header">
+              <h2>{selectedUser.name}'s Posts</h2>
+              <button 
+                className="popup-close"
+                onClick={() => setShowUserPostsPopup(false)}
+              >
+                ×
+              </button>
+            </div>
+            <div className="popup-body">
+              <div className="posts-list">
+                {userPosts.length === 0 ? (
+                  <p className="no-posts">This user has no posts.</p>
+                ) : (
+                  userPosts.map(post => (
+                    <div key={post._id} className="post-item">
+                      <div className="post-info">
+                        <h4>By: {post.author.name}</h4>
+                        <p className="post-content">{post.content.substring(0, 100)}...</p>
+                        <p className="post-date">Posted: {formatDate(post.createdAt)}</p>
+                      </div>
+                      <div className="post-actions">
+                        <button 
+                          className="btn-small btn-danger"
+                          onClick={() => handleDeletePost(post._id)}
+                        >
+                          Delete Post
+                        </button>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
           </div>
         </div>
       )}

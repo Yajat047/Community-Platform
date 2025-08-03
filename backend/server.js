@@ -28,7 +28,7 @@ app.use('/api/admin', require('./routes/admin'));
 
 // Basic route
 app.get('/', (req, res) => {
-  res.json({ message: 'Community Platform API is running!' });
+  res.json({ message: 'Get Linked API is running!' });
 });
 
 const PORT = process.env.PORT || 5000;
