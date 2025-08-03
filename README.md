@@ -1,4 +1,4 @@
-# Get Linked - Mini LinkedIn Community Platform
+# Get Linked - Mini Community Platform
 
 A full-stack social networking platform built with modern web technologies, featuring user authentication, post management, admin dashboard, and real-time interactions.
 
