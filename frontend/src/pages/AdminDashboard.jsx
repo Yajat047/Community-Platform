@@ -1,17 +1,71 @@
 import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import './AdminDashboard.css';
+
+// Modal Component
+const UserPostsModal = ({ isOpen, user, posts, loading, onClose, onDeletePost, formatDate }) => {
+  if (!isOpen) return null;
+
+  return createPortal(
+    <div className="modal-backdrop" onClick={onClose}>
+      <div className="modal-container" onClick={(e) => e.stopPropagation()}>
+        <div className="modal-header">
+          <h3>Posts by {user?.name}</h3>
+          <button className="modal-close-btn" onClick={onClose}>
+            <span>&times;</span>
+          </button>
+        </div>
+        
+        <div className="modal-content">
+          {loading ? (
+            <div className="modal-loading">
+              <p>Loading posts...</p>
+            </div>
+          ) : posts.length === 0 ? (
+            <div className="modal-empty">
+              <p>This user hasn't created any posts yet.</p>
+            </div>
+          ) : (
+            <div className="modal-posts-list">
+              {posts.map(post => (
+                <div key={post._id} className="modal-post-item">
+                  <div className="modal-post-content">
+                    <h4>{post.content.length > 100 ? `${post.content.substring(0, 100)}...` : post.content}</h4>
+                    <p className="modal-post-date">
+                      Posted on {formatDate(post.createdAt)}
+                    </p>
+                  </div>
+                  <div className="modal-post-actions">
+                    <button 
+                      className="btn-delete-post"
+                      onClick={() => onDeletePost(post._id)}
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>,
+    document.body
+  );
+};
 
 const AdminDashboard = () => {
   const { user } = useAuth();
   const [stats, setStats] = useState(null);
   const [users, setUsers] = useState([]);
   const [posts, setPosts] = useState([]);
-  const [userPosts, setUserPosts] = useState([]);
-  const [selectedUser, setSelectedUser] = useState(null);
-  const [showUserPostsPopup, setShowUserPostsPopup] = useState(false);
   const [activeTab, setActiveTab] = useState('stats');
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalUser, setModalUser] = useState(null);
+  const [modalUserPosts, setModalUserPosts] = useState([]);
+  const [modalLoading, setModalLoading] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -41,18 +95,47 @@ const AdminDashboard = () => {
     }
   };
 
-  const fetchUserPosts = async (userId, userName) => {
+  const showUserPosts = async (user) => {
+    setModalUser(user);
+    setModalOpen(true);
+    setModalLoading(true);
+    
     try {
-      setLoading(true);
-      const response = await axios.get(`/admin/users/${userId}/posts`);
-      setUserPosts(response.data);
-      setSelectedUser({ id: userId, name: userName });
-      setShowUserPostsPopup(true);
+      const response = await axios.get(`/admin/users/${user._id}/posts`);
+      setModalUserPosts(response.data);
     } catch (error) {
-      setError('Failed to fetch user posts');
-      console.error('Fetch user posts error:', error);
+      console.error('Error fetching user posts:', error);
+      setError('Failed to load user posts');
+      setModalUserPosts([]);
     } finally {
-      setLoading(false);
+      setModalLoading(false);
+    }
+  };
+
+  const closeModal = () => {
+    setModalOpen(false);
+    setModalUser(null);
+    setModalUserPosts([]);
+    setModalLoading(false);
+  };
+
+  const deletePostFromModal = async (postId) => {
+    if (!window.confirm('Are you sure you want to delete this post?')) {
+      return;
+    }
+
+    try {
+      await axios.delete(`/admin/posts/${postId}`);
+      // Update the modal posts list
+      setModalUserPosts(modalUserPosts.filter(p => p._id !== postId));
+      // Update the main posts list
+      setPosts(posts.filter(p => p._id !== postId));
+      // Refresh stats
+      const statsRes = await axios.get('/admin/stats');
+      setStats(statsRes.data);
+    } catch (error) {
+      setError('Failed to delete post');
+      console.error('Delete post error:', error);
     }
   };
 
@@ -82,10 +165,6 @@ const AdminDashboard = () => {
     try {
       await axios.delete(`/admin/posts/${postId}`);
       setPosts(posts.filter(p => p._id !== postId));
-      // Also update userPosts if we're viewing user-specific posts in popup
-      if (showUserPostsPopup) {
-        setUserPosts(userPosts.filter(p => p._id !== postId));
-      }
       // Refresh stats
       const statsRes = await axios.get('/admin/stats');
       setStats(statsRes.data);
@@ -224,9 +303,9 @@ const AdminDashboard = () => {
                   <span className={`role-badge ${u.role}`}>{u.role}</span>
                   <button 
                     className="btn-small btn-info"
-                    onClick={() => fetchUserPosts(u._id, u.name)}
+                    onClick={() => showUserPosts(u)}
                   >
-                    Show Posts
+                    View Posts
                   </button>
                   {u.role === 'user' && (
                     <button 
@@ -284,47 +363,15 @@ const AdminDashboard = () => {
         </div>
       )}
 
-      {/* User Posts Popup Modal */}
-      {showUserPostsPopup && selectedUser && (
-        <div className="popup-overlay" onClick={() => setShowUserPostsPopup(false)}>
-          <div className="popup-content" onClick={(e) => e.stopPropagation()}>
-            <div className="popup-header">
-              <h2>{selectedUser.name}'s Posts</h2>
-              <button 
-                className="popup-close"
-                onClick={() => setShowUserPostsPopup(false)}
-              >
-                ×
-              </button>
-            </div>
-            <div className="popup-body">
-              <div className="posts-list">
-                {userPosts.length === 0 ? (
-                  <p className="no-posts">This user has no posts.</p>
-                ) : (
-                  userPosts.map(post => (
-                    <div key={post._id} className="post-item">
-                      <div className="post-info">
-                        <h4>By: {post.author.name}</h4>
-                        <p className="post-content">{post.content.substring(0, 100)}...</p>
-                        <p className="post-date">Posted: {formatDate(post.createdAt)}</p>
-                      </div>
-                      <div className="post-actions">
-                        <button 
-                          className="btn-small btn-danger"
-                          onClick={() => handleDeletePost(post._id)}
-                        >
-                          Delete Post
-                        </button>
-                      </div>
-                    </div>
-                  ))
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      <UserPostsModal
+        isOpen={modalOpen}
+        user={modalUser}
+        posts={modalUserPosts}
+        loading={modalLoading}
+        onClose={closeModal}
+        onDeletePost={deletePostFromModal}
+        formatDate={formatDate}
+      />
     </div>
   );
 };
